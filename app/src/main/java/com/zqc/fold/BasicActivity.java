@@ -51,6 +51,7 @@ public class BasicActivity extends Activity implements View.OnClickListener {
             public void onStart() {
                 TranslateAnimation translateAnimation = new TranslateAnimation(0, 0, 0, DIS);
                 translateAnimation.setDuration(1300);
+                translateAnimation.setFillAfter(true);
                 translateAnimation.setAnimationListener(new Animation.AnimationListener() {
                     @Override
                     public void onAnimationStart(Animation animation) {
@@ -59,12 +60,13 @@ public class BasicActivity extends Activity implements View.OnClickListener {
 
                     @Override
                     public void onAnimationEnd(Animation animation) {
+                        foldView.setVisibility(View.INVISIBLE);//foldView需要占一个位置，不然topIv会扩充到整个View
                         int left = topIv.getLeft();
                         int top = (int) (topIv.getTop() + DIS);
                         int width = topIv.getWidth();
                         int height = topIv.getHeight();
                         topIv.clearAnimation();
-                        topIv.layout(left, (int) (top + DIS), left + width, top + height);
+                        topIv.layout(left, top, left + width, top + height);
                     }
 
                     @Override
