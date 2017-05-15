@@ -8,17 +8,20 @@ import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+
+import static com.zqc.fold.TouchFoldLayout.BETWEEN;
 
 public class BasicActivity extends Activity implements View.OnClickListener {
 
     private ImageView topIv;
     private ImageView bottomIv;
     private TouchFoldLayout foldView;
-    private int time = 200;
+    private int time = 240;
+    private int first_time = 1000;
     private float density;
     private LinearLayout rootView;
     private static float DIS = 0;
@@ -37,6 +40,7 @@ public class BasicActivity extends Activity implements View.OnClickListener {
         rootView = (LinearLayout) findViewById(R.id.root);
         density = dm.density;
         DIS = -10 * density;
+        first_time = TouchFoldLayout.LEN*BETWEEN + 100 + 20;//factors.lenght*mHandler.sendMessageDelayed(20) + mHandler.postDelayed(100) + 20(yan chi)
         topIv = (ImageView) findViewById(R.id.top_img);
         bottomIv = (ImageView) findViewById(R.id.bottom_img);
 
@@ -50,7 +54,7 @@ public class BasicActivity extends Activity implements View.OnClickListener {
             @Override
             public void onStart() {
                 TranslateAnimation translateAnimation = new TranslateAnimation(0, 0, 0, DIS);
-                translateAnimation.setDuration(1300);
+                translateAnimation.setDuration(700);//1300=factors.lenght*mHandler.sendMessageDelayed(20) + mHandler.postDelayed(100)
                 translateAnimation.setFillAfter(true);
                 translateAnimation.setAnimationListener(new Animation.AnimationListener() {
                     @Override
@@ -60,13 +64,19 @@ public class BasicActivity extends Activity implements View.OnClickListener {
 
                     @Override
                     public void onAnimationEnd(Animation animation) {
-                        foldView.setVisibility(View.INVISIBLE);//foldView需要占一个位置，不然topIv会扩充到整个View
                         int left = topIv.getLeft();
                         int top = (int) (topIv.getTop() + DIS);
                         int width = topIv.getWidth();
                         int height = topIv.getHeight();
                         topIv.clearAnimation();
                         topIv.layout(left, top, left + width, top + height);
+
+                        if (foldView.getVisibility() != View.VISIBLE) return;
+                        int left1 = foldView.getLeft();
+                        int top1 = (int) (foldView.getTop() + DIS);
+                        int width1 = foldView.getWidth();
+                        int height1 = foldView.getHeight();
+                        foldView.layout(left1, top1, left1 + width1, top1 + height1);
                     }
 
                     @Override
@@ -81,30 +91,37 @@ public class BasicActivity extends Activity implements View.OnClickListener {
             @Override
             public void onEnd() {
                 foldView.setVisibility(View.INVISIBLE);
-                AnimationSet set = new AnimationSet(true);
-                AlphaAnimation alphaAnimation = new AlphaAnimation(1, 0);
-                alphaAnimation.setDuration(time);
-                set.addAnimation(alphaAnimation);
-                TranslateAnimation translateAnimation = new TranslateAnimation(0, 0, 0, -10 * density);
-                translateAnimation.setDuration(time);
-                set.addAnimation(translateAnimation);
-                set.setAnimationListener(new Animation.AnimationListener() {
+                rootView.postDelayed(new Runnable() {
                     @Override
-                    public void onAnimationStart(Animation animation) {
+                    public void run() {
 
+//                        AnimationSet set = new AnimationSet(true);
+                        AlphaAnimation alphaAnimation = new AlphaAnimation(1, 0);
+                        alphaAnimation.setDuration(time);
+                        alphaAnimation.setInterpolator(new DecelerateInterpolator(0.707f));//sqrt(2)/2
+//                        set.addAnimation(alphaAnimation);
+//                        TranslateAnimation translateAnimation = new TranslateAnimation(0, 0, 0, -10 * density);
+//                        translateAnimation.setDuration(time);
+//                        set.addAnimation(translateAnimation);
+                        alphaAnimation.setAnimationListener(new Animation.AnimationListener() {
+                            @Override
+                            public void onAnimationStart(Animation animation) {
+
+                            }
+
+                            @Override
+                            public void onAnimationEnd(Animation animation) {
+                                topIv.setVisibility(View.GONE);
+                            }
+
+                            @Override
+                            public void onAnimationRepeat(Animation animation) {
+
+                            }
+                        });
+                        topIv.startAnimation(alphaAnimation);
                     }
-
-                    @Override
-                    public void onAnimationEnd(Animation animation) {
-                        topIv.setVisibility(View.GONE);
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animation animation) {
-
-                    }
-                });
-                topIv.startAnimation(set);
+                }, 160);
             }
         });
         findViewById(R.id.root).setOnClickListener(this);
